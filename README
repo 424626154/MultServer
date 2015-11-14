@@ -4,7 +4,7 @@ It is a simple network frame of server with golang
 
 This structure of frame
 --------------------------------------------------------------
-						Structure
+-- Structure
 --------------------------------------------------------------
 .
 ├── lanstonetech.com
