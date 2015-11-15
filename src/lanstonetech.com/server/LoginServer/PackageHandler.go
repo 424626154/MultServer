@@ -1,7 +1,7 @@
 package LoginServer
 
 import (
-	"fmt"
+	"lanstonetech.com/common/logger"
 	"lanstonetech.com/network"
 	"lanstonetech.com/packet"
 	"lanstonetech.com/packet/ID"
@@ -9,18 +9,17 @@ import (
 
 func ShakeHand(obj *network.SocketBase, msg network.Message) int {
 
-	fmt.Printf("ShakeHand......\n")
 	message := new(packet.C2M_Req_ShakeHand)
 	err := message.UnPack(msg)
 	if err != nil {
 		SendShakeHand(obj, ID.REQ_INVALID)
-		fmt.Printf("[ShakeHand] UnPack failed! err=%v\n", err)
+		logger.Errorf("[ShakeHand] UnPack failed! err=%v\n", err)
 		return ID.MESSAGE_OK
 	}
 
-	fmt.Printf("[ShakeHand] %s\n", message.Greeting)
-
 	SendShakeHand(obj, ID.REQ_SHAKEHAND_OK)
+	logger.Errorf("[ShakeHand] Process successful! Greeting=%s\n", message.Greeting)
+
 	return ID.MESSAGE_OK
 }
 
@@ -28,7 +27,13 @@ func SendShakeHand(obj *network.SocketBase, result uint16) {
 	msg := new(packet.M2C_Resp_ShakeHand)
 	msg.Result = result
 
-	if message, err := msg.Pack(); err != nil {
-		obj.SendMsg(message)
+	message, err := msg.Pack()
+	if err != nil {
+		logger.Errorf("msg.Pack failed! err=%v", err)
+		return
+	}
+
+	if err := obj.SendMsg(message); err != nil {
+		logger.Errorf("obj.SendMsg failed! err=%v", err)
 	}
 }

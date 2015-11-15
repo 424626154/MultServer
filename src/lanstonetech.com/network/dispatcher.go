@@ -19,8 +19,6 @@ func Dispatcher(conn *SocketBase, msg Message) int {
 		if k == msg.PacketID {
 			return v(conn, msg)
 		}
-		// fmt.Printf("HandlerPackage......\n")
-		// v(conn, msg)
 	}
 
 	return 0

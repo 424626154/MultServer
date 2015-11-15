@@ -1,39 +1,56 @@
 package LoginServer
 
 import (
-	"fmt"
+	"lanstonetech.com/common/logger"
 	"lanstonetech.com/network"
 	"lanstonetech.com/packet/ID"
+	"lanstonetech.com/system/config"
 	"net"
 	"time"
 )
+
+var ServerType = 1
 
 func HandlerPackageFunc() {
 	network.AddHandler(ID.C2M_Req_ShakeHand, ShakeHand)
 }
 
+func InitConf() {
+	config.LoadServerInfo(ServerType)
+	logger.Infof("[LoginServer] =>> ip=%v port=%v group=%v\n", config.SERVER_IP, config.SERVER_PORT, config.SERVER_GROUP)
+}
+
+func InitLog() {
+	logger.SetConsole(true)
+	logger.SetConsolePrefix("LoginServer")
+	logger.Initialize("./log", "LoginServer_0")
+	logger.SetLevel(logger.LEVEL(2))
+}
+
 func Run() {
-	fmt.Printf("server start...\n")
+	InitLog()
+	InitConf()
+	logger.Infof("server start...\n")
 
 	HandlerPackageFunc()
 
 	tcpaddr, err := net.ResolveTCPAddr("tcp", "127.0.0.1:8888")
 	if err != nil {
-		fmt.Printf("net.ResolveTCPAddr failed! err=%v\n", err)
+		logger.Errorf("net.ResolveTCPAddr failed! err=%v\n", err)
 		return
 	}
 
 	listener, err := net.ListenTCP("tcp4", tcpaddr)
 	if err != nil {
-		fmt.Printf("net.Listen failed! err=%v\n", err)
+		logger.Errorf("net.Listen failed! err=%v\n", err)
 		return
 	}
 
 	for {
 		conn, err := listener.AcceptTCP()
-		fmt.Printf("=>%v connecting...\n", conn.RemoteAddr().String())
+		logger.Infof("=>%v connecting...\n", conn.RemoteAddr().String())
 		if err != nil {
-			fmt.Printf("listener.Accept failed! err=%v\n", err)
+			logger.Errorf("listener.Accept failed! err=%v\n", err)
 			continue
 		}
 
@@ -55,7 +72,7 @@ func ProcessConnection(conn *net.TCPConn) {
 	for {
 		msgs, err := SocketBase.RecvMsgs()
 		if err != nil {
-			fmt.Printf("SocketBase.RecvMsgs failed! err=%v\n", err)
+			logger.Errorf("SocketBase.RecvMsgs failed! err=%v\n", err)
 			return
 		}
 
