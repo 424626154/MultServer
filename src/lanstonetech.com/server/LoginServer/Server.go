@@ -60,6 +60,8 @@ func Run() {
 }
 
 func ProcessConnection(conn *net.TCPConn) {
+	defer logger.CatchException()
+
 	SocketBase := network.NewSocketBase(conn)
 	defer SocketBase.Close()
 
