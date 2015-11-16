@@ -695,6 +695,7 @@ func Warnf(format string, args ...interface{}) {
 			defer logFile.RUnlock()
 			logFile.logger.Output(2, context)
 		}
+
 		console(WARN, context)
 	}
 }
@@ -718,6 +719,7 @@ func Errorf(format string, args ...interface{}) {
 			defer logFile.RUnlock()
 			logFile.logger.Output(2, context)
 		}
+
 		console(ERROR, context)
 	}
 }
@@ -741,6 +743,7 @@ func Fatalf(format string, args ...interface{}) {
 			defer logFile.RUnlock()
 			logFile.logger.Output(2, context)
 		}
+
 		console(FATAL, context)
 	}
 }
