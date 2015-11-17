@@ -17,7 +17,7 @@ func HandlerPackageFunc() {
 
 func InitConf() {
 	config.LoadServerInfo(ServerType)
-	logger.Infof("[LoginServer] =>> ip=%v port=%v group=%v\n", config.SERVER_IP, config.SERVER_PORT, config.SERVER_GROUP)
+	logger.Infof("[LoginServer] =>> ip=%v port=%v group=%v", config.SERVER_IP, config.SERVER_PORT, config.SERVER_GROUP)
 }
 
 func InitLog() {
@@ -28,29 +28,31 @@ func InitLog() {
 }
 
 func Run() {
+	defer logger.CatchException()
+
 	InitLog()
 	InitConf()
-	logger.Infof("server start...\n")
+	logger.Infof("server start...")
 
 	HandlerPackageFunc()
 
 	tcpaddr, err := net.ResolveTCPAddr("tcp", "127.0.0.1:8888")
 	if err != nil {
-		logger.Errorf("net.ResolveTCPAddr failed! err=%v\n", err)
+		logger.Errorf("net.ResolveTCPAddr failed! err=%v", err)
 		return
 	}
 
 	listener, err := net.ListenTCP("tcp4", tcpaddr)
 	if err != nil {
-		logger.Errorf("net.Listen failed! err=%v\n", err)
+		logger.Errorf("net.Listen failed! err=%v", err)
 		return
 	}
 
 	for {
 		conn, err := listener.AcceptTCP()
-		logger.Infof("=>%v connecting...\n", conn.RemoteAddr().String())
+		logger.Infof("=>%v connecting...", conn.RemoteAddr().String())
 		if err != nil {
-			logger.Errorf("listener.Accept failed! err=%v\n", err)
+			logger.Errorf("listener.Accept failed! err=%v", err)
 			continue
 		}
 
@@ -74,8 +76,12 @@ func ProcessConnection(conn *net.TCPConn) {
 	for {
 		msgs, err := SocketBase.RecvMsgs()
 		if err != nil {
-			logger.Errorf("SocketBase.RecvMsgs failed! err=%v\n", err)
+			logger.Errorf("SocketBase.RecvMsgs failed! err=%v", err)
 			return
+		}
+
+		if len(msgs) == 0 {
+			continue
 		}
 
 		for _, msg := range msgs {

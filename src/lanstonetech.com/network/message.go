@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	MAX_PACKAGE_LEN    = 2048
+	MAX_PACKAGE_LEN    = 1024
 	MAX_HEADER_LEN     = 4 + 4
 	MAX_ACCOUNT_LEN    = 48
 	MAX_SIGNATURE_LEN  = 48
@@ -47,6 +47,8 @@ func (this *Message) ParseHeader(buf []byte) {
 	pos += 4
 	this.PackageLen = common.ReadUint32(buf[pos : pos+4])
 	pos += 4
+
+	this.Data = make([]byte, this.PackageLen)
 }
 
 //解析协议头
