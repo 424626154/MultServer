@@ -2,6 +2,9 @@ Hello everyone!
 
 It is a simple network frame of server with golang
 
+Require:
+	github.com/samuel/go-zookeeper
+
 #### This structure of frame
 --------------------------------------------------------------
 -- Structure
