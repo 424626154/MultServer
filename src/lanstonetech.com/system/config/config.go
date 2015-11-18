@@ -6,7 +6,6 @@ import (
 )
 
 var (
-	// SERVER       string
 	SERVER_IP    string
 	SERVER_PORT  string
 	SERVER_GROUP string

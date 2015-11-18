@@ -23,7 +23,7 @@ func InitConf() {
 func InitLog() {
 	logger.SetConsole(true)
 	logger.SetConsolePrefix("LoginServer")
-	logger.Initialize("./log", "LoginServer_0")
+	// logger.Initialize("./log", "LoginServer_0")
 	logger.SetLevel(logger.LEVEL(2))
 }
 
