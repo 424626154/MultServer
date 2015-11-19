@@ -1,4 +1,4 @@
-package zmk
+package zkm
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 var ZKConn zkconn
 
 type zkconn struct {
-	*sync.RWMutex
+	sync.RWMutex
 	Conn    *zk.Conn
 	Root    string
 	objects map[string]ZKObject
@@ -28,24 +28,14 @@ type ZKObject interface {
 	ProcessEvent(event *EventArgs) error
 }
 
-func Root() string {
-	ZKConn.Lock()
-	defer ZKConn.Unlock()
-
-	if ZKConn.root == nil {
-		panic("[ERR] zk.root == nil")
-	}
-
-	return ZKConn.root
-}
-
 func Init() {
 	servers := make([]string, 0)
 
 	count := config.ServerConfig.MustInt("ZK", "Count")
 	for i := 0; i < count; i++ {
-		server := config.ServerConfig.MustInt("ZK", fmt.Sprintf("IP_%d", i))
-		servers = append(servers, server)
+		server := config.ServerConfig.MustValue("ZK", fmt.Sprintf("IP_%d", i))
+		port := config.ServerConfig.MustInt("ZK", fmt.Sprintf("PORT_%d", i))
+		servers = append(servers, fmt.Sprintf("%s:%d", server, port))
 	}
 
 	conn, _, err := Connect(servers)
@@ -55,6 +45,8 @@ func Init() {
 
 	root := config.ServerConfig.MustValue("ZK", "Root")
 
+	fmt.Printf("root=%v\n", root)
+	ZKConn.objects = make(map[string]ZKObject, 0)
 	ZKConn.Root = root
 	ZKConn.Conn = conn
 }
@@ -64,11 +56,22 @@ func Connect(servers []string) (*zk.Conn, <-chan zk.Event, error) {
 	return zk.Connect(servers, time.Duration(tick)*time.Second)
 }
 
+func Root() string {
+	ZKConn.Lock()
+	defer ZKConn.Unlock()
+
+	if ZKConn.Conn == nil {
+		panic("[ERR] zk.Conn == nil")
+	}
+
+	return ZKConn.Root
+}
+
 func AddObserver(node string, obj ZKObject) {
 	ZKConn.Lock()
 	defer ZKConn.Unlock()
 
-	if len(node) == nil {
+	if len(node) == 0 {
 		return
 	}
 
@@ -76,16 +79,13 @@ func AddObserver(node string, obj ZKObject) {
 }
 
 func AddObservers(obj ZKObject) {
-	ZKConn.Lock()
-	defer ZKConn.Unlock()
-
 	nodes, err := obj.Nodes()
 	if err != nil {
 		panic(err)
 	}
 
 	for _, node := range nodes {
-		addObserver(node, obj)
+		AddObserver(node, obj)
 	}
 }
 
@@ -99,33 +99,33 @@ func processRequest() {
 	}
 }
 
-func Create(node string, data []byte, temp bool) {
+func Create(node string, data string, temp bool) (string, error) {
 	ZKConn.Lock()
 	defer ZKConn.Unlock()
 
 	if temp {
-		return ZKConn.Conn.Create(node, data, zk.FlagEphemeral, zk.WorldACL(zk.PermAll))
+		return ZKConn.Conn.Create(node, []byte(data), zk.FlagEphemeral, zk.WorldACL(zk.PermAll))
 	} else {
-		return ZKConn.Conn.Create(node, data, 0, zk.WorldACL(zk.PermAll))
+		return ZKConn.Conn.Create(node, []byte(data), 0, zk.WorldACL(zk.PermAll))
 	}
 }
 
-func CreateIfNotExists(node string, data []byte, temp bool) {
-	ZKConn.Lock()
-	defer ZKConn.Unlock()
+func CreateIfNotExists(node string, data string, temp bool) (bool, *zk.Stat, error) {
 
 	if ZKConn.Conn == nil {
 		return false, nil, fmt.Errorf("zk.CreateIfNotExists failed! conn == nil")
 	}
 
-	exist, _, err := Exists(node)
+	exist, stat, err := Exists(node)
 	if err != nil {
-		return
+		return false, nil, err
 	}
 
 	if !exist {
 		Create(node, data, temp)
 	}
+
+	return exist, stat, nil
 }
 
 func Exists(node string) (bool, *zk.Stat, error) {
@@ -160,12 +160,12 @@ func Get(node string) (string, *zk.Stat, error) {
 	return string(data), stat, nil
 }
 
-func Set(node string, data []byte, version int32) {
+func Set(node string, data []byte, version int32) (*zk.Stat, error) {
 	ZKConn.Lock()
 	defer ZKConn.Unlock()
 
 	if ZKConn.Conn == nil {
-		return "", nil, fmt.Errorf("zk.Set failed! conn == nil")
+		return nil, fmt.Errorf("zk.Set failed! conn == nil")
 	}
 
 	stat, err := ZKConn.Conn.Set(node, data, version)
@@ -181,7 +181,7 @@ func Delete(node string, version int32) error {
 	defer ZKConn.Unlock()
 
 	if ZKConn.Conn == nil {
-		return "", nil, fmt.Errorf("zk.Delete failed! conn == nil")
+		return fmt.Errorf("zk.Delete failed! conn == nil")
 	}
 
 	return ZKConn.Conn.Delete(node, version)
@@ -192,7 +192,7 @@ func Children(node string) ([]string, *zk.Stat, error) {
 	defer ZKConn.Unlock()
 
 	if ZKConn.Conn == nil {
-		return "", nil, fmt.Errorf("zk.Children failed! conn == nil")
+		return nil, nil, fmt.Errorf("zk.Children failed! conn == nil")
 	}
 
 	childrens, stat, err := ZKConn.Conn.Children(node)
@@ -211,7 +211,7 @@ func GetW(node string) (string, *zk.Stat, error) {
 		return "", nil, fmt.Errorf("zk.GetW failed! conn == nil")
 	}
 
-	data, stat, ch, error := ZKConn.Conn.GetW(node)
+	data, stat, ch, err := ZKConn.Conn.GetW(node)
 	if err != nil {
 		return "", nil, err
 	}
@@ -221,7 +221,7 @@ func GetW(node string) (string, *zk.Stat, error) {
 		var eventArgs EventArgs
 		eventArgs.Event = event
 
-		handlerEvent(&event)
+		handlerEvent(&eventArgs)
 	}()
 
 	return string(data), stat, nil
@@ -232,12 +232,12 @@ func ExistsW(node string) (bool, *zk.Stat, error) {
 	defer ZKConn.Unlock()
 
 	if ZKConn.Conn == nil {
-		return "", nil, fmt.Errorf("zk.ExistsW failed! conn == nil")
+		return false, nil, fmt.Errorf("zk.ExistsW failed! conn == nil")
 	}
 
-	exist, stat, ch, error := ZKConn.Conn.ExistsW(node)
+	exist, stat, ch, err := ZKConn.Conn.ExistsW(node)
 	if err != nil {
-		return nil, nil, err
+		return false, nil, err
 	}
 
 	go func() {
@@ -245,7 +245,7 @@ func ExistsW(node string) (bool, *zk.Stat, error) {
 		var eventArgs EventArgs
 		eventArgs.Event = event
 
-		handlerEvent(&event)
+		handlerEvent(&eventArgs)
 	}()
 
 	return exist, stat, nil
@@ -256,10 +256,10 @@ func ChildrenW(node string) ([]string, *zk.Stat, error) {
 	defer ZKConn.Unlock()
 
 	if ZKConn.Conn == nil {
-		return "", nil, fmt.Errorf("zk.GetW failed! conn == nil")
+		return nil, nil, fmt.Errorf("zk.GetW failed! conn == nil")
 	}
 
-	data, stat, ch, error := ZKConn.Conn.ChildrenW(node)
+	data, stat, ch, err := ZKConn.Conn.ChildrenW(node)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -269,7 +269,7 @@ func ChildrenW(node string) ([]string, *zk.Stat, error) {
 		var eventArgs EventArgs
 		eventArgs.Event = event
 
-		handlerEvent(&event)
+		handlerEvent(&eventArgs)
 	}()
 
 	return data, stat, nil
@@ -287,9 +287,16 @@ func handlerEvent(event *EventArgs) {
 }
 
 func processException(event *EventArgs) {
-
+	for node, obj := range ZKConn.objects {
+		if node == event.Event.Path {
+			go obj.ProcessException(event)
+		}
+	}
 }
 
 func processEvent(event *EventArgs) {
-
+	obj, ok := ZKConn.objects[event.Event.Path]
+	if ok {
+		obj.ProcessEvent(event)
+	}
 }
