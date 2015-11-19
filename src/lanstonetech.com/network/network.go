@@ -19,7 +19,7 @@ type SocketBase struct {
 func NewSocketBase(conn *net.TCPConn) *SocketBase {
 	socket := &SocketBase{
 		TCPConn: conn,
-		buffer:  make([]byte, 5*MAX_PACKAGE_LEN), //the max size of buffer
+		buffer:  make([]byte, 0), //the max size of buffer
 		pos:     0,
 	}
 
@@ -40,8 +40,13 @@ func (this *SocketBase) RecvMsgs() ([]Message, error) {
 		return nil, err
 	}
 
+	if n == 0 {
+		return nil, nil
+	}
+
 	//update buffer
-	copy(this.buffer[this.pos:this.pos+n], recv_data[0:n])
+	temp := this.buffer[:this.pos]
+	this.buffer = append(temp, recv_data[:n]...)
 	this.pos += n
 
 	for {
@@ -59,11 +64,13 @@ func (this *SocketBase) RecvMsgs() ([]Message, error) {
 		}
 
 		//read body
-		message.Data = this.buffer[MAX_HEADER_LEN : MAX_HEADER_LEN+int(message.PackageLen)]
+		pos := MAX_HEADER_LEN + int(message.PackageLen)
+		message.Data = this.buffer[MAX_HEADER_LEN:pos]
 
 		//handle remain buffer
-		this.buffer = this.buffer[MAX_HEADER_LEN+int(message.PackageLen):]
-		this.pos -= MAX_HEADER_LEN + int(message.PackageLen)
+		temp := this.buffer[pos:this.pos]
+		this.buffer = temp
+		this.pos -= pos
 
 		messages = append(messages, message)
 	}
@@ -71,12 +78,8 @@ func (this *SocketBase) RecvMsgs() ([]Message, error) {
 	return messages, nil
 }
 
+//channel
 func (this *SocketBase) SendMsg(msg *Message) error {
-	this.RWMutex.Lock()
-	defer func() {
-		this.RWMutex.Unlock()
-	}()
-
 	send_data := make([]byte, 4+4+msg.PackageLen)
 	header_len := msg.WriteHeader(send_data)
 
@@ -91,9 +94,7 @@ func (this *SocketBase) SendMsg(msg *Message) error {
 }
 
 func (this *SocketBase) Close() {
-	this.RWMutex.Lock()
-	defer func() {
-		this.RWMutex.Unlock()
-		this.TCPConn.Close()
-	}()
+	this.TCPConn.Close()
+	this.buffer = nil
+	this.pos = 0
 }
