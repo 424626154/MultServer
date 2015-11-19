@@ -110,6 +110,24 @@ func Create(node string, data []byte, temp bool) {
 	}
 }
 
+func CreateIfNotExists(node string, data []byte, temp bool) {
+	ZKConn.Lock()
+	defer ZKConn.Unlock()
+
+	if ZKConn.Conn == nil {
+		return false, nil, fmt.Errorf("zk.CreateIfNotExists failed! conn == nil")
+	}
+
+	exist, _, err := Exists(node)
+	if err != nil {
+		return
+	}
+
+	if !exist {
+		Create(node, data, temp)
+	}
+}
+
 func Exists(node string) (bool, *zk.Stat, error) {
 	ZKConn.Lock()
 	defer ZKConn.Unlock()
@@ -156,6 +174,17 @@ func Set(node string, data []byte, version int32) {
 	}
 
 	return stat, nil
+}
+
+func Delete(node string, version int32) error {
+	ZKConn.Lock()
+	defer ZKConn.Unlock()
+
+	if ZKConn.Conn == nil {
+		return "", nil, fmt.Errorf("zk.Delete failed! conn == nil")
+	}
+
+	return ZKConn.Conn.Delete(node, version)
 }
 
 func Children(node string) ([]string, *zk.Stat, error) {
