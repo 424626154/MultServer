@@ -5,11 +5,12 @@ import (
 	"lanstonetech.com/network"
 	"lanstonetech.com/packet/ID"
 	"lanstonetech.com/system/config"
+	"lanstonetech.com/system/zkm"
 	"net"
 	"time"
 )
 
-var ServerType = 1
+var ServerType uint8 = 1
 
 func HandlerPackageFunc() {
 	network.AddHandler(ID.C2M_Req_ShakeHand, ShakeHand)
@@ -33,6 +34,10 @@ func Run() {
 	InitLog()
 	InitConf()
 	logger.Infof("server start...")
+
+	zkm.Start()
+
+	InitZK()
 
 	HandlerPackageFunc()
 

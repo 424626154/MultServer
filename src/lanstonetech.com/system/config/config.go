@@ -6,8 +6,9 @@ import (
 )
 
 var (
+	SERVER_TYPE  uint8
 	SERVER_IP    string
-	SERVER_PORT  string
+	SERVER_PORT  uint16
 	SERVER_GROUP string
 )
 
@@ -23,7 +24,7 @@ func init() {
 	ServerConfig = *config
 }
 
-func LoadServerInfo(ServerType int) {
+func LoadServerInfo(ServerType uint8) {
 	section := "LoginServer"
 	index := 0
 
@@ -32,9 +33,10 @@ func LoadServerInfo(ServerType int) {
 	}
 
 	server_ip := ServerConfig.MustValue(section, fmt.Sprintf("IP_%d", index))
-	server_port := ServerConfig.MustValue(section, fmt.Sprintf("PORT_%d", index))
+	server_port := uint16(ServerConfig.MustInt(section, fmt.Sprintf("PORT_%d", index)))
 	group := ServerConfig.MustValue(section, fmt.Sprintf("GROUP_%d", index))
 
+	SERVER_TYPE = ServerType
 	SERVER_IP = server_ip
 	SERVER_PORT = server_port
 	SERVER_GROUP = group
