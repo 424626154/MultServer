@@ -5,7 +5,7 @@ import (
 	"lanstonetech.com/network"
 	"lanstonetech.com/packet/ID"
 	"lanstonetech.com/system/config"
-	"lanstonetech.com/system/zkm"
+	// "lanstonetech.com/system/zkm"
 	"net"
 	"time"
 )
@@ -34,8 +34,6 @@ func Run() {
 	InitLog()
 	InitConf()
 	logger.Infof("server start...")
-
-	zkm.Start()
 
 	InitZK()
 
@@ -92,7 +90,7 @@ func ProcessConnection(conn *net.TCPConn) {
 		for _, msg := range msgs {
 			ret := network.Dispatcher(SocketBase, msg)
 			if ret == ID.MESSAGE_OK {
-				return
+				// return
 			}
 		}
 	}

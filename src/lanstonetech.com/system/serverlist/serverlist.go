@@ -65,19 +65,19 @@ func (this *serverlist) requestServerList(serverGroup string) {
 		}
 
 		this.parseServerList(serverGroup, sl)
+		time.Sleep(5 * time.Second)
 	}
 }
 
 func (this *serverlist) parseServerList(serverGroup string, sl []string) {
 	for _, s := range sl {
 		var serverInfo zkm.ZKServerInfo
-		err := json.Unmarshal([]byte(s), &serverInfo)
-		if err != nil {
+		if err := json.Unmarshal([]byte(s), &serverInfo); err != nil {
 			logger.Errorf("parseServerList failed! err=%v", err)
 			return
 		}
 
-		if serverInfo.Class == config.SERVER_TYPE && serverInfo.IP == config.SERVER_IP && serverInfo.Port == config.SERVER_PORT {
+		if serverInfo.Type == config.SERVER_TYPE && serverInfo.IP == config.SERVER_IP && serverInfo.Port == config.SERVER_PORT {
 			continue
 		}
 
@@ -90,24 +90,24 @@ func (this *serverlist) addServer(server *zkm.ZKServerInfo) {
 		return
 	}
 
-	sl, ok := this.servers[server.Class]
+	sl, ok := this.servers[server.Type]
 	if !ok {
 		temp := []zkm.ZKServerInfo{*server}
-		this.servers[server.Class] = temp
+		this.servers[server.Type] = temp
 	} else {
 		sl = append(sl, *server)
-		this.servers[server.Class] = sl
+		this.servers[server.Type] = sl
 	}
 }
 
 func (this *serverlist) hasServer(server *zkm.ZKServerInfo) bool {
-	sl, ok := this.servers[server.Class]
+	sl, ok := this.servers[server.Type]
 	if !ok {
 		return false
 	}
 
 	for _, s := range sl {
-		if s.Group == server.Group && s.Class == server.Class && s.IP == server.IP && s.Port == server.Port {
+		if s.Group == server.Group && s.Type == server.Type && s.IP == server.IP && s.Port == server.Port {
 			return true
 		}
 	}
@@ -135,8 +135,8 @@ func (this *serverlist) ProcessEvent(event *zkm.EventArgs) error {
 }
 
 func (this *serverlist) GetServerList(class uint8) ([]zkm.ZKServerInfo, error) {
-	this.Unlock()
-	defer this.Lock()
+	this.RLock()
+	defer this.RUnlock()
 
 	sl, ok := this.servers[class]
 	if !ok {

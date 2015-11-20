@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"lanstonetech.com/server/LoginServer"
 	"os"
@@ -14,10 +15,18 @@ func init() {
 }
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Printf("ERR: Less Argument!\nUsage: %s LoginServer\n", os.Args[0])
+	// if len(os.Args) < 2 {
+	// 	fmt.Printf("ERR: Less Argument!\nUsage: %s LoginServer\n", os.Args[0])
+	// 	return
+	// }
+	flag.Parse()
+	args := flag.Args()
+	if len(args) < 1 {
 		return
 	}
 
-	ServerList[os.Args[1]]()
+	server, ok := ServerList[args[0]]
+	if !ok {
+		return
+	}
 }

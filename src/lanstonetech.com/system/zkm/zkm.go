@@ -29,6 +29,9 @@ type ZKObject interface {
 }
 
 func Init() {
+	ZKConn.Lock()
+	defer ZKConn.Unlock()
+
 	servers := make([]string, 0)
 
 	count := config.ServerConfig.MustInt("ZK", "Count")
@@ -45,7 +48,6 @@ func Init() {
 
 	root := config.ServerConfig.MustValue("ZK", "Root")
 
-	fmt.Printf("root=%v\n", root)
 	ZKConn.objects = make(map[string]ZKObject, 0)
 	ZKConn.Root = root
 	ZKConn.Conn = conn
@@ -57,8 +59,8 @@ func Connect(servers []string) (*zk.Conn, <-chan zk.Event, error) {
 }
 
 func Root() string {
-	ZKConn.Lock()
-	defer ZKConn.Unlock()
+	ZKConn.RLock()
+	defer ZKConn.RUnlock()
 
 	if ZKConn.Conn == nil {
 		panic("[ERR] zk.Conn == nil")
@@ -129,8 +131,8 @@ func CreateIfNotExists(node string, data string, temp bool) (bool, *zk.Stat, err
 }
 
 func Exists(node string) (bool, *zk.Stat, error) {
-	ZKConn.Lock()
-	defer ZKConn.Unlock()
+	ZKConn.RLock()
+	defer ZKConn.RUnlock()
 
 	if ZKConn.Conn == nil {
 		return false, nil, fmt.Errorf("zk.Exists failed! conn == nil")
@@ -145,8 +147,8 @@ func Exists(node string) (bool, *zk.Stat, error) {
 }
 
 func Get(node string) (string, *zk.Stat, error) {
-	ZKConn.Lock()
-	defer ZKConn.Unlock()
+	ZKConn.RLock()
+	defer ZKConn.RUnlock()
 
 	if ZKConn.Conn == nil {
 		return "", nil, fmt.Errorf("zk.Get failed! conn == nil")
@@ -188,8 +190,8 @@ func Delete(node string, version int32) error {
 }
 
 func Children(node string) ([]string, *zk.Stat, error) {
-	ZKConn.Lock()
-	defer ZKConn.Unlock()
+	ZKConn.RLock()
+	defer ZKConn.RUnlock()
 
 	if ZKConn.Conn == nil {
 		return nil, nil, fmt.Errorf("zk.Children failed! conn == nil")
@@ -204,8 +206,8 @@ func Children(node string) ([]string, *zk.Stat, error) {
 }
 
 func GetW(node string) (string, *zk.Stat, error) {
-	ZKConn.Lock()
-	defer ZKConn.Unlock()
+	ZKConn.RLock()
+	defer ZKConn.RUnlock()
 
 	if ZKConn.Conn == nil {
 		return "", nil, fmt.Errorf("zk.GetW failed! conn == nil")
@@ -228,8 +230,8 @@ func GetW(node string) (string, *zk.Stat, error) {
 }
 
 func ExistsW(node string) (bool, *zk.Stat, error) {
-	ZKConn.Lock()
-	defer ZKConn.Unlock()
+	ZKConn.RLock()
+	defer ZKConn.RUnlock()
 
 	if ZKConn.Conn == nil {
 		return false, nil, fmt.Errorf("zk.ExistsW failed! conn == nil")
@@ -252,8 +254,8 @@ func ExistsW(node string) (bool, *zk.Stat, error) {
 }
 
 func ChildrenW(node string) ([]string, *zk.Stat, error) {
-	ZKConn.Lock()
-	defer ZKConn.Unlock()
+	ZKConn.RLock()
+	defer ZKConn.RUnlock()
 
 	if ZKConn.Conn == nil {
 		return nil, nil, fmt.Errorf("zk.GetW failed! conn == nil")
