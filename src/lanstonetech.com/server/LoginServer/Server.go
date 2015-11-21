@@ -1,23 +1,22 @@
 package LoginServer
 
 import (
+	"fmt"
+	"lanstonetech.com/common"
 	"lanstonetech.com/common/logger"
 	"lanstonetech.com/network"
 	"lanstonetech.com/packet/ID"
 	"lanstonetech.com/system/config"
-	// "lanstonetech.com/system/zkm"
 	"net"
 	"time"
 )
-
-var ServerType uint8 = 1
 
 func HandlerPackageFunc() {
 	network.AddHandler(ID.C2M_Req_ShakeHand, ShakeHand)
 }
 
-func InitConf() {
-	config.LoadServerInfo(ServerType)
+func InitConf(index int) {
+	config.LoadServerInfo(common.LOGIN_SERVER_TYPE, index)
 	logger.Infof("[LoginServer] =>> ip=%v port=%v group=%v", config.SERVER_IP, config.SERVER_PORT, config.SERVER_GROUP)
 }
 
@@ -28,18 +27,19 @@ func InitLog() {
 	logger.SetLevel(logger.LEVEL(2))
 }
 
-func Run() {
+func Run(index int) {
 	defer logger.CatchException()
 
+	logger.Errorf("index=%v", index)
 	InitLog()
-	InitConf()
+	InitConf(index)
 	logger.Infof("server start...")
 
 	InitZK()
 
 	HandlerPackageFunc()
 
-	tcpaddr, err := net.ResolveTCPAddr("tcp", "127.0.0.1:8888")
+	tcpaddr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("%s:%d", config.SERVER_IP, config.SERVER_PORT))
 	if err != nil {
 		logger.Errorf("net.ResolveTCPAddr failed! err=%v", err)
 		return
@@ -90,7 +90,7 @@ func ProcessConnection(conn *net.TCPConn) {
 		for _, msg := range msgs {
 			ret := network.Dispatcher(SocketBase, msg)
 			if ret == ID.MESSAGE_OK {
-				// return
+				return
 			}
 		}
 	}

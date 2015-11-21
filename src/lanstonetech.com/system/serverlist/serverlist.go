@@ -15,7 +15,6 @@ var ServerList serverlist
 
 type serverlist struct {
 	sync.RWMutex
-	// serverGroup string
 	serverTypes []string
 	servers     map[uint8][]zkm.ZKServerInfo
 }
@@ -24,13 +23,9 @@ func init() {
 	ServerList.servers = make(map[uint8][]zkm.ZKServerInfo)
 }
 
-// func Init(group string) {
-
-// }
-
 func (this *serverlist) AddMonitor(serverGroup string, serverType uint8) {
-	this.RWMutex.Lock()
-	defer this.RWMutex.Unlock()
+	this.Lock()
+	defer this.Unlock()
 
 	this.serverTypes = append(this.serverTypes, zkm.Server.MakeServerListGroupNode(serverGroup, serverType))
 }
@@ -65,11 +60,12 @@ func (this *serverlist) requestServerList(serverGroup string) {
 		}
 
 		this.parseServerList(serverGroup, sl)
-		time.Sleep(5 * time.Second)
+		return
 	}
 }
 
 func (this *serverlist) parseServerList(serverGroup string, sl []string) {
+	cleanup := true
 	for _, s := range sl {
 		var serverInfo zkm.ZKServerInfo
 		if err := json.Unmarshal([]byte(s), &serverInfo); err != nil {
@@ -81,11 +77,25 @@ func (this *serverlist) parseServerList(serverGroup string, sl []string) {
 			continue
 		}
 
-		this.addServer(&serverInfo)
+		this.addServer(&serverInfo, cleanup)
+		if cleanup {
+			cleanup = false
+		}
 	}
 }
 
-func (this *serverlist) addServer(server *zkm.ZKServerInfo) {
+func (this *serverlist) cleanupServer(serverType uint8) {
+	_, ok := this.servers[serverType]
+	if ok {
+		delete(this.servers, serverType)
+	}
+}
+
+func (this *serverlist) addServer(server *zkm.ZKServerInfo, cleanup bool) {
+	if cleanup {
+		this.cleanupServer(server.Type)
+	}
+
 	if this.hasServer(server) {
 		return
 	}
@@ -128,7 +138,7 @@ func (this *serverlist) ProcessEvent(event *zkm.EventArgs) error {
 		//节点数据改变
 	} else if event.Event.Type == zk.EventNodeChildrenChanged {
 		//子节点改变
-		this.RequestServerList()
+		this.requestServerList(event.Event.Path)
 	}
 
 	return nil
@@ -144,4 +154,30 @@ func (this *serverlist) GetServerList(class uint8) ([]zkm.ZKServerInfo, error) {
 	}
 
 	return sl, nil
+}
+
+func (this *serverlist) GetAllServerList() string {
+	this.RLock()
+	defer this.RUnlock()
+
+	all := "["
+
+	n := 0
+	for _, serverinfos := range this.servers {
+		if n != 0 {
+			all = all + ","
+		}
+
+		s, err := json.Marshal(serverinfos)
+		if err != nil {
+			return err.Error()
+		}
+
+		all = all + string(s)
+		n += 1
+	}
+
+	all = all + "]"
+
+	return all
 }

@@ -92,7 +92,7 @@ func AddObservers(obj ZKObject) {
 }
 
 func Start() {
-	processRequest()
+	go processRequest()
 }
 
 func processRequest() {
@@ -272,6 +272,7 @@ func ChildrenW(node string) ([]string, *zk.Stat, error) {
 		eventArgs.Event = event
 
 		handlerEvent(&eventArgs)
+		time.Sleep(1 * time.Second)
 	}()
 
 	return data, stat, nil
@@ -283,22 +284,22 @@ func handlerEvent(event *EventArgs) {
 		event.Event.State == zk.StateExpired ||
 		event.Event.State == zk.StateAuthFailed {
 		processException(event)
+		time.Sleep(1 * time.Second)
 	} else {
 		processEvent(event)
+		time.Sleep(1 * time.Second)
 	}
 }
 
 func processException(event *EventArgs) {
-	for node, obj := range ZKConn.objects {
-		if node == event.Event.Path {
-			go obj.ProcessException(event)
-		}
+	for _, obj := range ZKConn.objects {
+		go obj.ProcessException(event)
 	}
 }
 
 func processEvent(event *EventArgs) {
 	obj, ok := ZKConn.objects[event.Event.Path]
 	if ok {
-		obj.ProcessEvent(event)
+		go obj.ProcessEvent(event)
 	}
 }
