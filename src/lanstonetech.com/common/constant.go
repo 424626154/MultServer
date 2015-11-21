@@ -1,6 +1,15 @@
 package common
 
 const (
+	MAX_PACKAGE_LEN    = 1024
+	MAX_HEADER_LEN     = 4 + 4 //int(PacketID) + int(PackageLen)
+	MAX_ACCOUNT_LEN    = 48
+	MAX_SIGNATURE_LEN  = 48
+	MAX_TOKEN_LEN      = 48
+	COMMON_PACKAGE_LEN = 2 + MAX_ACCOUNT_LEN + 2 + MAX_SIGNATURE_LEN + 2 + MAX_TOKEN_LEN
+)
+
+const (
 	MAX_GREETING_LEN = 128
 )
 

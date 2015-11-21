@@ -8,9 +8,6 @@ import (
 type SocketBase struct {
 	sync.RWMutex
 	*net.TCPConn
-	// Param SocketBase
-	senddata  chan Message
-	send_flag chan int
 
 	buffer []byte //buffer for receive
 	pos    int    //index for write
@@ -78,12 +75,8 @@ func (this *SocketBase) RecvMsgs() ([]Message, error) {
 	return messages, nil
 }
 
-//channel
 func (this *SocketBase) SendMsg(msg *Message) error {
-	send_data := make([]byte, 4+4+msg.PackageLen)
-	header_len := msg.WriteHeader(send_data)
-
-	copy(send_data[header_len:], msg.Data)
+	send_data := msg.PackMessage()
 
 	_, err := this.TCPConn.Write(send_data)
 	if err != nil {

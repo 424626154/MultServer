@@ -12,7 +12,7 @@ const (
 	MAX_ACCOUNT_LEN    = 48
 	MAX_SIGNATURE_LEN  = 48
 	MAX_TOKEN_LEN      = 48
-	COMMON_PACKAGE_LEN = MAX_ACCOUNT_LEN + MAX_SIGNATURE_LEN + MAX_TOKEN_LEN
+	COMMON_PACKAGE_LEN = 2 + MAX_ACCOUNT_LEN + 2 + MAX_SIGNATURE_LEN + 2 + MAX_TOKEN_LEN
 )
 
 type Message struct {
@@ -32,6 +32,9 @@ type CommonPackage struct {
 	Token     string
 }
 
+//=============================================================================
+//------------------------- Server Action -------------------------------------
+//=============================================================================
 func NewMessage(packet_id uint32, size uint32) *Message {
 	msg := new(Message)
 	msg.PacketID = packet_id
@@ -49,17 +52,6 @@ func (this *Message) ParseHeader(buf []byte) {
 	pos += 4
 
 	this.Data = make([]byte, this.PackageLen)
-}
-
-//解析协议头
-func (this *Message) WriteHeader(buf []byte) int {
-	pos := 0
-	common.WriteUint32(buf[pos:pos+4], this.PacketID)
-	pos += 4
-	common.WriteUint32(buf[pos:pos+4], this.PackageLen)
-	pos += 4
-
-	return MAX_HEADER_LEN
 }
 
 //解析公共包头
@@ -96,4 +88,55 @@ func (this *Message) ParseCommonPackage() (CommonPackage, int, error) {
 	common_package.Token = token
 
 	return common_package, int(pos), nil
+}
+
+func (this *Message) PackMessage() []byte {
+	buf := make([]byte, MAX_HEADER_LEN+this.PackageLen)
+
+	pos := 0
+	common.WriteUint32(buf[pos:pos+4], this.PacketID)
+	pos += 4
+	common.WriteUint32(buf[pos:pos+4], this.PackageLen)
+	pos += 4
+
+	copy(buf[pos:], this.Data[0:this.PackageLen])
+
+	return buf
+}
+
+//=============================================================================
+//------------------------- Client Action -------------------------------------
+//=============================================================================
+func (this *Message) PackHeader() int {
+	pos := 0
+	common.WriteUint32(this.Data[pos:pos+4], this.PacketID)
+	pos += 4
+	common.WriteUint32(this.Data[pos:pos+4], this.PackageLen)
+	pos += 4
+
+	return pos
+}
+
+func (this *Message) PackCommonPackage(index int) int {
+	pos := index
+
+	leng := len(this.Account)
+	common.WriteUint16(this.Data[pos:pos+2], uint16(leng))
+	pos += 2
+	common.WriteString(this.Data[pos:pos+leng], this.Account)
+	pos += 48
+
+	leng = len(this.Signature)
+	common.WriteUint16(this.Data[pos:pos+2], uint16(leng))
+	pos += 2
+	common.WriteString(this.Data[pos:pos+leng], this.Signature)
+	pos += 48
+
+	leng = len(this.Token)
+	common.WriteUint16(this.Data[pos:pos+2], uint16(leng))
+	pos += 2
+	common.WriteString(this.Data[pos:pos+leng], this.Token)
+	pos += 48
+
+	return pos
 }
