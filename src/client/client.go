@@ -55,16 +55,16 @@ func main() {
 	//====================================================================
 	tcpaddr, err := net.ResolveTCPAddr("tcp", "127.0.0.1:4000")
 	if err != nil {
-		fmt.Printf("[client] net.ResolveTCPAddr failed! err=%v\n", err)
+		logger.Errorf("[client] net.ResolveTCPAddr failed! err=%v", err)
 	}
 
 	conn, err := net.DialTCP("tcp", nil, tcpaddr)
 	if err != nil {
-		fmt.Printf("[client] net.DiaTCP failed! err=%v\n", err)
+		logger.Errorf("[client] net.DiaTCP failed! err=%v", err)
 	}
 	defer func() {
 		conn.Close()
-		fmt.Printf("[client] ok...!\n")
+		logger.Errorf("[client] ok...!")
 	}()
 
 	//====================================================================
@@ -73,7 +73,7 @@ func main() {
 	TCPConn := network.NewSocketBase(conn)
 	leng, err = TCPConn.Write(message.Data)
 	if err != nil {
-		fmt.Printf("[client] conn.Write failed! err=%v\n", err)
+		logger.Errorf("[client] conn.Write failed! err=%v", err)
 	}
 
 	//====================================================================
