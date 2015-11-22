@@ -1,11 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"lanstonetech.com/common"
 	"lanstonetech.com/common/logger"
 	"lanstonetech.com/network"
 	"net"
+	"time"
 )
 
 //====================================================================
@@ -56,43 +56,47 @@ func main() {
 	//====================================================================
 	//---------------------------- New Session ---------------------------
 	//====================================================================
-	tcpaddr, err := net.ResolveTCPAddr("tcp", "127.0.0.1:4000")
+	tcpaddr, err := net.ResolveTCPAddr("tcp", "127.0.0.1:4001")
 	if err != nil {
 		logger.Errorf("[client] net.ResolveTCPAddr failed! err=%v", err)
 	}
 
-	conn, err := net.DialTCP("tcp", nil, tcpaddr)
-	if err != nil {
-		logger.Errorf("[client] net.DiaTCP failed! err=%v", err)
-	}
-	defer func() {
-		conn.Close()
-		logger.Errorf("[client] ok...!")
-	}()
+	for {
+		conn, err := net.DialTCP("tcp", nil, tcpaddr)
+		if err != nil {
+			logger.Errorf("[client] net.DiaTCP failed! err=%v", err)
+		}
+		defer func() {
+			conn.Close()
+			logger.Errorf("[client] ok...!")
+		}()
 
-	//====================================================================
-	//---------------------------- Send ----------------------------------
-	//====================================================================
-	TCPConn := network.NewSocketBase(conn)
-	leng, err = TCPConn.Write(message.Data)
-	if err != nil {
-		logger.Errorf("[client] conn.Write failed! err=%v", err)
-	}
+		//====================================================================
+		//---------------------------- Send ----------------------------------
+		//====================================================================
+		TCPConn := network.NewSocketBase(conn)
+		leng, err = TCPConn.Write(message.Data)
+		if err != nil {
+			logger.Errorf("[client] conn.Write failed! err=%v", err)
+		}
 
-	//====================================================================
-	//---------------------------- Recv ----------------------------------
-	//====================================================================
-	//Parse Message
-	msgs, err := TCPConn.RecvMsgs()
-	if err != nil {
-		logger.Errorf("err=%v", err)
-		return
-	}
+		//====================================================================
+		//---------------------------- Recv ----------------------------------
+		//====================================================================
+		//Parse Message
+		msgs, err := TCPConn.RecvMsgs()
+		if err != nil {
+			logger.Errorf("err=%v", err)
+			return
+		}
 
-	//handler messages
-	for _, msg := range msgs {
-		result := common.ReadUint16(msg.Data[0:2])
-		logger.Errorf("result=%v\n", result)
+		//handler messages
+		for _, msg := range msgs {
+			result := common.ReadUint16(msg.Data[0:2])
+			logger.Errorf("result=%v\n", result)
+		}
+
+		time.Sleep(1 * time.Second)
 	}
 
 	return
