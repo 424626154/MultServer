@@ -12,7 +12,7 @@ type C2M_Req_ShakeHand struct {
 	Greeting string
 }
 
-func (this *C2M_Req_ShakeHand) UnPack(msg network.Message) error {
+func (this *C2M_Req_ShakeHand) UnPack(msg *network.Message) error {
 	CommonPackage, pos, err := msg.ParseCommonPackage()
 	if err != nil {
 		return fmt.Errorf("ParseCommonPackage failed! Err=[%s]", err)

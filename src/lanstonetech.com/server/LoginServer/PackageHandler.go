@@ -7,7 +7,7 @@ import (
 	"lanstonetech.com/packet/ID"
 )
 
-func ShakeHand(obj *network.SocketBase, msg network.Message) int {
+func ShakeHand(obj *network.SocketBase, msg *network.Message) int {
 
 	message := new(packet.C2M_Req_ShakeHand)
 	err := message.UnPack(msg)

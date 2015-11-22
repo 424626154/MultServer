@@ -27,8 +27,8 @@ func (this *SocketBase) IsPacket(id int32) bool {
 	return true
 }
 
-func (this *SocketBase) RecvMsgs() ([]Message, error) {
-	messages := make([]Message, 0)
+func (this *SocketBase) RecvMsgs() ([]*Message, error) {
+	messages := make([]*Message, 0)
 
 	//读数据
 	recv_data := make([]byte, MAX_PACKAGE_LEN)
@@ -69,7 +69,7 @@ func (this *SocketBase) RecvMsgs() ([]Message, error) {
 		this.buffer = temp
 		this.pos -= pos
 
-		messages = append(messages, message)
+		messages = append(messages, &message)
 	}
 
 	return messages, nil
