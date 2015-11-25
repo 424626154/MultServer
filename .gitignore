@@ -8,3 +8,5 @@ pkg/darwin_amd64/github.com/samuel/go-zookeeper/zk.a
 *.a
 
 *.log
+
+src/webmanager/webmanager

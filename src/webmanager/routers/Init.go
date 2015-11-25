@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"fmt"
 	"lanstonetech.com/common"
 	"net/http"
 	"sync"
@@ -26,6 +27,8 @@ func init() {
 
 func (this *dax) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	head := common.GetHeader(r.URL.Path)
+
+	fmt.Printf("method=%v-------------------path=%v head=%v\n", r.Method, r.URL.Path, head)
 
 	h, ok := mux[head]
 	if ok {
