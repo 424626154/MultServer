@@ -1,5 +1,3 @@
-Hello everyone!
-
 It is a simple network frame of server with golang
 
 Require:
@@ -9,27 +7,74 @@ Require:
 --------------------------------------------------------------
 -- Structure
 --------------------------------------------------------------
-.
-├── lanstonetech.com
-│   ├── common =>>(common packages)
-│   │   ├── constant.go
-│   │   └── rwnet.go
-│   ├── network =>>(network package)
-│   │   ├── dispatcher.go (dispatcher process of packages)
-│   │   ├── message.go (protocol message)
-│   │   └── network.go (socket api)
-│   ├── packet =>>(protocols)	
-│   │   ├── C2M_Req_ShakeHand.go
-│   │   ├── ID
-│   │   │   └── ID.go
-│   │   └── M2C_Resp_ShakeHand.go
-│   └── server =>>(servers)
-│       └── LoginServer
-│           ├── PackageHandler.go
-│           └── Server.go
-└── server =>>(Run)
-    └── server.go
-
+├── README
+├── conf
+│   └── server.ini
+└── src
+    ├── client
+    │   └── client.go
+    ├── lanstonetech.com
+    │   ├── common
+    │   │   ├── config
+    │   │   │   ├── conf.go
+    │   │   │   ├── read.go
+    │   │   │   └── write.go
+    │   │   ├── constant.go
+    │   │   ├── logger
+    │   │   │   └── logger.go
+    │   │   ├── rwnet.go
+    │   │   └── urlhandler.go
+    │   ├── dbm
+    │   │   ├── database
+    │   │   │   ├── cmd.go
+    │   │   │   ├── server.go
+    │   │   │   ├── sqlconn.go
+    │   │   │   └── zkhandler.go
+    │   │   └── db_pool.go
+    │   ├── network
+    │   │   ├── dispatcher.go
+    │   │   ├── message.go
+    │   │   └── network.go
+    │   ├── packet
+    │   │   ├── C2M_Req_ShakeHand.go
+    │   │   ├── ID
+    │   │   │   └── ID.go
+    │   │   └── M2C_Resp_ShakeHand.go
+    │   ├── server
+    │   │   ├── GateServer
+    │   │   │   ├── HttpRequest.go
+    │   │   │   ├── Server.go
+    │   │   │   └── ZKHandler.go
+    │   │   └── LoginServer
+    │   │       ├── PackageHandler.go
+    │   │       ├── Server.go
+    │   │       └── ZKHandler.go
+    │   └── system
+    │       ├── config
+    │       │   └── config.go
+    │       ├── serverlist
+    │       │   └── serverlist.go
+    │       └── zkm
+    │           ├── database.go
+    │           ├── serverlist.go
+    │           └── zkm.go
+    ├── server
+    │   ├── redist.sh
+    │   ├── server.go
+    │   └── start.sh
+    └── webmanager
+        ├── app
+        │   └── app.go
+        ├── controllers
+        │   ├── Controller.go
+        │   └── LoginController.go
+        ├── routers
+        │   ├── Init.go
+        │   └── router.go
+        ├── views
+        │   ├── database.html
+        │   └── login.html
+        └── webmanager.go
 --------------------------------------------------------------
 --------------------------------------------------------------
 
