@@ -1,9 +1,15 @@
 package main
 
 import (
-	"webmanager/app"
+	"github.com/danuxguin/daxweb"
+	"webmanager/controllers"
 )
 
+func init() {
+	daxweb.Dax.AddRouter("/", &controllers.MainController{})
+	daxweb.Dax.AddRouter("/login", &controllers.LoginController{})
+}
+
 func main() {
-	app.Run()
+	daxweb.Run("127.0.0.1", 8888)
 }

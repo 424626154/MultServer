@@ -2,32 +2,40 @@ package controllers
 
 import (
 	"fmt"
+	"github.com/danuxguin/daxweb"
 	"net/http"
 )
 
 type MainController struct {
-	Controller
+	daxweb.Controller
 }
 
 func (this *MainController) Handler(w http.ResponseWriter, r *http.Request) {
 	this.Controller.Init(this, w, r)
 }
 
-func (this *MainController) Login() {
-	if this.r.Method == "GET" {
-		fmt.Fprintf(this.w, "Login--------/login--------------Get")
-		// this.Tpl = "login.html"
-		// this.ExecuteTpl()
-	} else if this.r.Method == "POST" {
-		fmt.Fprintf(this.w, "Login--------/login--------------Post")
-	}
-}
-
 func (this *MainController) Get() {
-	this.Tpl = "database.html"
-	this.ExecuteTpl()
+
+	account := this.GetCookie("account")
+	password := this.GetCookie("password")
+
+	if account == "admin" && password == "admin" {
+		this.Tpl = "./views/database.html"
+		this.ExecuteTpl()
+	} else {
+		http.Redirect(this.Ctx.W, this.Ctx.R, "/login", http.StatusFound)
+	}
+
 }
 
 func (this *MainController) Post() {
-	fmt.Fprintf(this.w, "----------------/------Post")
+	this.Ctx.R.ParseForm()
+	ip := this.Ctx.R.FormValue("ip")
+	port := this.Ctx.R.FormValue("port")
+	group := this.Ctx.R.FormValue("group")
+	db := this.Ctx.R.FormValue("db")
+
+	fmt.Printf("ip=%v port=%v group=%v db=%v\n", ip, port, group, db)
+
+	fmt.Fprintf(this.Ctx.W, "Add database sucessfule!")
 }

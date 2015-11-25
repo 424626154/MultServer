@@ -2,6 +2,7 @@ It is a simple network frame of server with golang
 
 Require:
 	github.com/samuel/go-zookeeper
+    github.com/danuxguin/daxweb
 
 #### This structure of frame
 --------------------------------------------------------------

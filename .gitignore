@@ -7,6 +7,21 @@ pkg/darwin_amd64/github.com/samuel/go-zookeeper/zk.a
 
 *.a
 
+src/github.com/samuel/go-zookeeper/
+
 *.log
 
+<<<<<<< Updated upstream
+=======
+*.zip
+
+src/github.com/astaxie/beego/
+
+src/github.com/lib/pq/
+
+src/client/client4000
+
+src/webmanager/test
+
+>>>>>>> Stashed changes
 src/webmanager/webmanager

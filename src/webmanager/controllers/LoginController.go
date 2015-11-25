@@ -1,12 +1,12 @@
 package controllers
 
 import (
-	"fmt"
+	"github.com/danuxguin/daxweb"
 	"net/http"
 )
 
 type LoginController struct {
-	Controller
+	daxweb.Controller
 }
 
 func (this *LoginController) Handler(w http.ResponseWriter, r *http.Request) {
@@ -14,18 +14,19 @@ func (this *LoginController) Handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (this *LoginController) Get() {
-	this.Tpl = "login.html"
+	this.Tpl = "./views/login.html"
 	this.ExecuteTpl()
 }
 
 func (this *LoginController) Post() {
-	this.r.ParseForm()
-	account := this.r.FormValue("account")
-	password := this.r.FormValue("password")
+	this.Ctx.R.ParseForm()
+	account := this.Ctx.R.FormValue("account")
+	password := this.Ctx.R.FormValue("password")
 
-	fmt.Printf("account=%v password=%v\n", account, password)
+	this.SetCookie("account", account, 5*60)
+	this.SetCookie("password", password, 5*60)
+
 	if account == "admin" && password == "admin" {
-		fmt.Printf("account=%v password=%v\n", account, password)
-		http.Redirect(this.w, this.r, "/", 200)
+		http.Redirect(this.Ctx.W, this.Ctx.R, "/", http.StatusFound)
 	}
 }
